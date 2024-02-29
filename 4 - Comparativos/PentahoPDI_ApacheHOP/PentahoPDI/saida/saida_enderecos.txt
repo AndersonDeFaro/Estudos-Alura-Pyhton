@@ -1,0 +1,4 @@
+logradouro;complemento;cep;bairro;localidade;uf;ibge;gia;ddd;siafi
+Avenida Maria Pastora;;49030-210;Farolândia;Aracaju;SE;2800308;;79;3105
+Avenida Melício Machado;lado par;49038-443;Aeroporto;Aracaju;SE;2800308;;79;3105
+Rua Álvaro Rodrigues;;49095-020;Jabotiana;Aracaju;SE;2800308;;79;3105

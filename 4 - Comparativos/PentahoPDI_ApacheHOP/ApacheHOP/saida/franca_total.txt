@@ -1,0 +1,12 @@
+pais;provincia;pontos;preco
+FR       ;Languedoc-Roussil;53384;11848
+FR       ;France Other     ;58451;10712
+FR       ;Beaujolais       ;91825;17216
+FR       ;Rhône Valley     ;96217;40264
+FR       ;Provence         ;118731;25803
+FR       ;Southwest France ;133177;32355
+FR       ;Champagne        ;145549;109895
+FR       ;Loire Valley     ;164244;41545
+FR       ;Alsace           ;218068;65219
+FR       ;Burgundy         ;356486;220707
+FR       ;Bordeaux         ;526723;155725

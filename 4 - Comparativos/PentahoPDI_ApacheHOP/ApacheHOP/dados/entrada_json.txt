@@ -1,0 +1,4 @@
+endereco
+https://viacep.com.br/ws/49030210/json/
+https://viacep.com.br/ws/49038443/json/
+https://viacep.com.br/ws/49095020/json/
