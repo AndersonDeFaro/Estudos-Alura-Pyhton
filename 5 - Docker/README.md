@@ -89,5 +89,5 @@
   docker pull aluradocker/alura-books:1.0
   docker pull mongo:4.4.6
 
-  docker run -d --network minha-bridge mongo:4.4.6 --name meu-mongo
-  docker run -d --network minha-bridge -p 3000:3000 aluradocker/alura-books:1.0 --name alura-books
+  docker run -d --network minha-bridge --name meu-mongo mongo:4.4.6 
+  docker run -d --network minha-bridge -p 3000:3000 --name alura-books aluradocker/alura-books:1.0
