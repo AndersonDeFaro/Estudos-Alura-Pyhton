@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  mongodb:
+    image: mongo:4.4.6
+    container_name: meu-mongo
+    networks:
+      - minha-bridge
+
+  alurabooks:
+    image: aluradocker/alura-books:1.0
+    container_name: alura-books
+    networks:
+      - minha-bridge
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongodb # Espera o container Mongo subir
+
+networks:
+  minha-bridge:
+    driver: bridge
