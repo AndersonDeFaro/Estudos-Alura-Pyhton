@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  oracle11g:
+    image: gaesi/oracle-xe-11g:0.2.0
+    container_name: oracle11gXE
+    volumes:
+      - ./ora-data:/u01/app/oracle/oradata
+    ports:
+      - 22:22
+      - 1521:1521
+    environment:
+      - ORACLE_ALLOW_REMOTE=true
+      - ORACLE_PWD=oracle
+    resources:
+      shm_size: 1g

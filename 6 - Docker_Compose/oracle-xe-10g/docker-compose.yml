@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  oracle10g:
+    image: ntconsultdocker/oracle-10g:1.0
+    container_name: oracle10gXE
+    volumes:
+      - ./ora-data10g:/oradata
+    ports:
+      - 22:22
+      - 1521:1521
+    environment:
+      - ORACLE_ALLOW_REMOTE=true
