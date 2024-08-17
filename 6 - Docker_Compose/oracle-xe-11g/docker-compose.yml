@@ -12,4 +12,4 @@ services:
       - ORACLE_ALLOW_REMOTE=true
       - ORACLE_PWD=oracle
     resources:
-      shm_size: 1g
+      - shm_size: 1g
