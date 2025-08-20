@@ -1,0 +1,232 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c0286859856"
+  },
+  "id": "T46yMATNiRd7INmZ",
+  "active": true,
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Obter - Dep UF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter - Dep UF": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Meses para Analise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meses para Analise": {
+      "main": [
+        [
+          {
+            "node": "Organizar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organizar Dados": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Obter - Dep UF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-18T10:28:33.942Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "carga-despesas-deputados-federais-start",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        -300
+      ],
+      "id": "484a02fe-cfa4-4a89-a6fa-4647850632b8",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -140
+      ],
+      "id": "3f52f62e-84dc-458f-8d02-40b9250d3658",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "collection": "deputados",
+        "options": {},
+        "query": "={ \n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        -520,
+        -140
+      ],
+      "id": "0fa2a9a3-7944-432b-8d80-2f5c26d3b7c3",
+      "name": "Obter - Dep UF",
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\nconst results = [];\n\nfor (const item of inputItems) {\n  const original = item.json;\n\n  const dataAtual = new Date();\n  dataAtual.setDate(1);\n  dataAtual.setHours(0, 0, 0, 0);\n\n  const dataInicio = new Date(dataAtual);\n  dataInicio.setMonth(dataAtual.getMonth() - 2); // Inclui o mês atual e 5 anteriores\n\n  for (let i = 0; i < 2; i++) {\n    const data = new Date(dataInicio);\n    data.setMonth(dataInicio.getMonth() + i);\n\n    const ano = data.getFullYear();\n    const mes = data.getMonth() + 1;\n\n    results.push({\n      json: {\n        ...original,\n        ano,\n        mes,\n        dataInicio: `${ano}-${mes.toString().padStart(2, '0')}-01`,\n        dataFim: new Date(ano, mes, 0).toISOString().split('T')[0]\n      }\n    });\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -140
+      ],
+      "id": "415a62a3-146f-4303-9a96-1110dfac9ce2",
+      "name": "Meses para Analise"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extrai e organiza informações do deputado\nconst deputado = {\n  id: $json.id,\n  nome: $json.nome,\n  partido: $json.siglaPartido,\n  uf: $json.siglaUf,\n  urlFoto: $json.urlFoto\n};\n\n// Extrai período de despesa\nconst ano = $json.ano;\nconst mes = $json.mes;\nconst dataInicio = $json.dataInicio;\nconst dataFim = $json.dataFim;\n\n// Monta o objeto de saída final\nconst resultado = {\n  deputado,\n  periodoDespesa: {\n    ano,\n    mes,\n    inicio: dataInicio,\n    fim: dataFim\n  }\n};\n\nreturn {\n  json: resultado\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -140
+      ],
+      "id": "3236b332-0ed0-4478-a491-99084cf4f7c8",
+      "name": "Organizar Dados"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZfKUmzRLjQQqELWq",
+          "mode": "list",
+          "cachedResultName": "carga-despesas-deputados-federais-loop"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        -140
+      ],
+      "id": "546b1d42-b741-484b-a402-de3c3bab036a",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        -60
+      ],
+      "id": "066195db-d876-4032-9974-329849f6a928",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:43.586Z",
+      "updatedAt": "2025-07-18T11:08:43.586Z",
+      "id": "gwa6nH9Q2iiDsjds",
+      "name": "Deputados Federais"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-07T12:03:15.791Z",
+  "versionId": "7b0c63dd-0593-443b-87be-8202cd8ddf49"
+}
