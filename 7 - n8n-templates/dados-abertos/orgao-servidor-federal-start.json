@@ -1,0 +1,136 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c0286859842"
+  },
+  "id": "yzjfwZhtVdrWV4WR",
+  "active": true,
+  "connections": {
+    "iniPag": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "iniPag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-18T10:28:33.762Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "orgao-servidor-federal-start",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gsfZHgJxTNoNl9QH",
+          "mode": "list",
+          "cachedResultName": "orgao-servidor-federal-loop"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "f2c5ba2f-2062-4758-9c00-3cd82b810c9f",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3c960c31-e591-40bb-89ee-e94441ff68f6",
+              "name": "pag",
+              "value": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "8c26e7c4-81d8-4b01-84c8-80c8657c366a",
+      "name": "iniPag"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8121d2d6-6752-4cfc-9b8a-99b8aaa02083",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-07T00:33:29.421Z",
+  "versionId": "00a98bc2-1235-4a07-9769-5e40395f5c8f"
+}

@@ -1,0 +1,276 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c0286859848"
+  },
+  "id": "fFdfRoZso34Za2YZ",
+  "active": false,
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP - Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Get": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Get1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-18T09:23:53.413Z",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "import-n8n-workflows",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "3af4ccce-038a-4916-89e2-8e6f33c46d43",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "collection": "workflows",
+        "options": {},
+        "query": "{\"isArchived\": false}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        80
+      ],
+      "id": "0479f302-802d-46c2-945e-5cf1f8790fcf",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "pEMtFKOsVwiNv19p",
+          "name": "MongoDB - n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://afsolution.ddns.net/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "nodes",
+              "value": "={{ $json.nodes }}"
+            },
+            {
+              "name": "connections",
+              "value": "={{ $json.connections }}"
+            },
+            {
+              "name": "settings",
+              "value": "={{ $json.settings }}"
+            },
+            {
+              "name": "staticData",
+              "value": "={{ $json.staticData }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        80
+      ],
+      "id": "9ad8de3e-7c4e-46ab-9978-308fa791ec37",
+      "name": "HTTP - Post",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yp8CnqTC8ME5YpQ9",
+          "name": "n8n_header_token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://afsolution.ddns.net/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "nodes",
+              "value": "={{ $json.nodes }}"
+            },
+            {
+              "name": "connections",
+              "value": "={{ $json.connections }}"
+            },
+            {
+              "name": "settings",
+              "value": "={{ $json.settings }}"
+            },
+            {
+              "name": "staticData",
+              "value": "={{ $json.staticData }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -180
+      ],
+      "id": "7b1680bd-eccb-4a3e-84e0-0a04d6613510",
+      "name": "HTTP - Get",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yp8CnqTC8ME5YpQ9",
+          "name": "n8n_header_token"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        300,
+        -180
+      ],
+      "id": "9caebb0e-1138-44c3-89c3-46506ee67fd7",
+      "name": "Split Out",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "https://afsolution.ddns.net/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        -180
+      ],
+      "id": "94d51665-5f68-4ce3-9629-7e07df69f6ac",
+      "name": "HTTP - Get1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yp8CnqTC8ME5YpQ9",
+          "name": "n8n_header_token"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:15:47.976Z",
+      "updatedAt": "2025-07-18T11:15:47.976Z",
+      "id": "OVFjsEWofsmJfLgK",
+      "name": "n8n"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-07-18T11:16:44.578Z",
+  "versionId": "bdcc6538-d9c0-4506-9e05-23fa3fa9c175"
+}

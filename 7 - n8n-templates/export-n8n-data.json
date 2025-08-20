@@ -1,0 +1,164 @@
+{
+  "_id": {
+    "$oid": "68a44b4ad5da6c0286e9d598"
+  },
+  "id": "o4xMIUU9AApRnCke",
+  "active": true,
+  "connections": {
+    "Export - Workflows": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Export - Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-19T09:53:00.571Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "export-n8n-data",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://afsolution.ddns.net/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        16
+      ],
+      "id": "d0a19907-0949-4338-9129-6fc857df7b47",
+      "name": "Export - Workflows",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "oLbjuuT7wLfOFuPg",
+          "name": "n8n_header_token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        16
+      ],
+      "id": "dd2d6a5f-e5fa-4bf8-b26b-af5c62a4ce93",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "workflows",
+        "fields": "=createdAt,updatedAt,name,active,isArchived,nodes,connections,settings,staticData,meta,pinData,versionId,triggerCount,tags",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        64
+      ],
+      "id": "707308cb-71f8-4b5d-8617-d145573244c8",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "SVBp67iZwjUlWhrE",
+          "name": "MongoDB - n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        32
+      ],
+      "id": "f1995cf0-a92d-461f-a55d-e3f11998e15e",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:15:47.976Z",
+      "updatedAt": "2025-07-18T11:15:47.976Z",
+      "id": "OVFjsEWofsmJfLgK",
+      "name": "n8n"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-19T09:53:15.853Z",
+  "versionId": "4872680e-b69c-4502-b5f4-bd9fe4f2597d"
+}

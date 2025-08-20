@@ -1,0 +1,401 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c028685984c"
+  },
+  "id": "vKImK4CiCEn3bgFq",
+  "active": false,
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "corrigir json": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Prepare - Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Info - Nao Localizada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare - Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send a text - afsolution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Info - Nao Localizada": {
+      "main": [
+        [
+          {
+            "node": "Send a text - afsolution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "corrigir json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-19T12:11:41.480Z",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "ai-query-deputados",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -300,
+        -500
+      ],
+      "id": "2f567c7e-886b-466f-a883-bf5a8aa53d66",
+      "name": "Telegram Trigger",
+      "webhookId": "6d732905-ea7f-4b30-a6d7-e7e91a2a844f",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "collection": "deputados",
+        "options": {},
+        "query": "={{ $json.toJsonString() }}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        -160
+      ],
+      "id": "d79ad161-d10e-4efc-860e-03a04f6bdcf4",
+      "name": "MongoDB",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe o item de input do n8n\nconst inputData = $input.first().json.output;\n\nconst processedData = [];\n\n// A nova estrutura do input é uma string, não um array, então processamos diretamente\nconst data = { message: { content: inputData } };\n\nif (data.message && data.message.content) {\n  try {\n    let contentStr = data.message.content.trim();\n\n    // ✅ Remove marcação de Markdown (```json ... ```)\n    if (contentStr.startsWith('```')) {\n      contentStr = contentStr.replace(/```json|```/gi, '').trim();\n    }\n\n    // ✅ Limpa quebras de linha e espaços em excesso\n    contentStr = contentStr.replace(/\\\\[rn]/g, '').replace(/\\s+/g, ' ').trim();\n\n    // ✅ Converte para JSON válido (chaves com aspas, valores com aspas duplas)\n    contentStr = contentStr\n      .replace(/([{,])\\s*([a-zA-Z0-9_]+)\\s*:/g, '$1\"$2\":')  // chaves\n      .replace(/:\\s*'([^']*)'/g, ': \"$1\"');                // valores com aspas simples\n\n    let finalObject = {};\n\n    // ✅ Se múltiplos objetos\n    if (contentStr.includes('}, {')) {\n      contentStr = '[' + contentStr + ']';\n      const parsedArray = JSON.parse(contentStr);\n\n      parsedArray.forEach(obj => {\n        Object.assign(finalObject, obj);\n      });\n\n    } else if (contentStr.startsWith('{') && contentStr.endsWith('}')) {\n      finalObject = JSON.parse(contentStr);\n    }\n\n    // ✅ Remove campos nulos, vazios ou undefined\n    Object.keys(finalObject).forEach(key => {\n      if (\n        finalObject[key] === null ||\n        finalObject[key] === '' ||\n        finalObject[key] === undefined\n      ) {\n        delete finalObject[key];\n      }\n    });\n\n    // ✅ Ajuste especial para o campo 'nome'\n    if (finalObject.nome === 'deputado') {\n      delete finalObject.nome;\n    } else if (finalObject.nome) {\n      finalObject.nome = {\n        $regex: finalObject.nome,\n        $options: 'i'\n      };\n    }\n\n    // ✅ Adiciona o objeto final em um novo objeto na lista de retorno\n    processedData.push({ json: finalObject });\n\n  } catch (error) {\n    console.log('Erro ao processar content:', error);\n    // Em caso de erro, ainda adicionamos o item original\n    processedData.push({ json: { content: inputData, error: 'Erro de processamento' } });\n  }\n}\n\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        -300
+      ],
+      "id": "d80cc74d-7d48-4fc2-8428-fd481a998243",
+      "name": "corrigir json"
+    },
+    {
+      "parameters": {
+        "chatId": "0",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1500,
+        -220
+      ],
+      "id": "3cc52023-d5c1-4689-b3d2-e9d45c44554e",
+      "name": "Send a text - afsolution1",
+      "webhookId": "ae145402-cc60-433e-bd62-8f514ed0dcff",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91db0c23-d162-4190-a262-7d86836b458a",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        -160
+      ],
+      "id": "c8445f78-9a08-4770-badc-08b771cc8937",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n    {\n      json: {\n        text: \"❌ Informação não localizada\"\n      }\n    }\n  ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -60
+      ],
+      "id": "4b13fcfa-5cfa-46b6-8403-846de1e6e9ab",
+      "name": "Info - Nao Localizada"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Dado do item atual\nconst mongoDoc = $json;\n\n// Monta o texto do item no padrão solicitado\nlet itemText = \"\";\n\n// Nome com emoji\nif (mongoDoc.nome) {\n  itemText += `👤 *${mongoDoc.nome}*\\n`;\n}\n\n// Partido\nif (mongoDoc.siglaPartido) {\n  itemText += `🏛️ Partido: ${mongoDoc.siglaPartido}\\n`;\n}\n\n// Estado\nif (mongoDoc.siglaUf) {\n  itemText += `📍 Estado: ${mongoDoc.siglaUf}\\n`;\n}\n\n// Cargo\nif (mongoDoc.cargo) {\n  itemText += `💼 Cargo: ${mongoDoc.cargo}\\n`;\n}\n\n// Email\nif (mongoDoc.email) {\n  itemText += `📧 Email: ${mongoDoc.email}`;\n}\n\n// Trunca se passar do limite\nconst MAX_CHARS = 500;\nif (itemText.length > MAX_CHARS) {\n  itemText = itemText.substring(0, MAX_CHARS - 10) + \"...\";\n}\n\n// Retorna o resultado formatado como mensagem do Telegram\nreturn {\n  json: {\n    text: itemText.trim() || \"❌ Item sem informações relevantes.\",\n    parse_mode: \"Markdown\"\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -340
+      ],
+      "id": "ef098705-78a5-47f7-b372-99771d6050bb",
+      "name": "Prepare - Telegram"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -280,
+        -220
+      ],
+      "id": "b1d86f9d-d697-4005-bc9d-94c1bd781ef7",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Você é um gerador de query MongoDB. Sua tarefa é criar um filtro MongoDB com base no texto de entrada, usando apenas os parâmetros: sigla do estado (siglaUf), sigla do partido (siglaPartido) e nome (nome do deputado). Se NOME não for um nome de PESSOA a opção deve ser desconsiderada. Retorne APENAS um objeto JSON válido, sem texto adicional, sem blocos de código Markdown, nem explicações. Omita parâmetros não mencionados no texto. Use siglas de estado com duas letras (ex.: 'SE' para Sergipe). Sua resposta deve começar diretamente com { e terminar com }. Os campos que não tiverem valores identificado deve ser omitido da query."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        -440
+      ],
+      "id": "c01de0fc-54a2-443a-8145-79941f832f44",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5-coder:1.5b",
+        "options": {
+          "temperature": 0,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -220
+      ],
+      "id": "004c23f4-c299-41a2-ae9d-06213cca52b9",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "yoDtkAtP60UtF4WG",
+          "name": "ollama_coder"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "update_id"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        120,
+        -200
+      ],
+      "id": "7a47eacb-ec7d-4e7b-bfa0-6bd3a5463223",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 861274634,
+          "message": {
+            "message_id": 349,
+            "from": {
+              "id": 0,
+              "is_bot": false,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 0,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "type": "private"
+            },
+            "date": 1752927155,
+            "text": "Listar deputados do partido do PL no estado de MG"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:15.365Z",
+      "updatedAt": "2025-07-18T11:08:15.365Z",
+      "id": "Dwy1qHJRMYrJCR8o",
+      "name": "IA Agent"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:43.586Z",
+      "updatedAt": "2025-07-18T11:08:43.586Z",
+      "id": "gwa6nH9Q2iiDsjds",
+      "name": "Deputados Federais"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-06T22:36:01.960Z",
+  "versionId": "b17e25ff-add7-42a1-bffb-fcc241181fc8"
+}

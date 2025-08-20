@@ -1,0 +1,346 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c0286859844"
+  },
+  "id": "gsfZHgJxTNoNl9QH",
+  "active": false,
+  "connections": {
+    "HTTP - ListarOrgaos": {
+      "main": [
+        [
+          {
+            "node": "Tem Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Dados": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Atualizar-Orgaos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar-Orgaos": {
+      "main": [
+        []
+      ]
+    },
+    "incrPag": {
+      "main": [
+        [
+          {
+            "node": "HTTP - ListarOrgaos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "pagATUAL": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "pagATUAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exec": {
+      "main": [
+        [
+          {
+            "node": "incrPag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-18T10:28:33.890Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "orgao-servidor-federal-loop",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siape",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pagina",
+              "value": "={{ $json[\"pagNext\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        -340
+      ],
+      "id": "4e72e235-ed1e-4700-9a1c-e36eaace9a95",
+      "name": "HTTP - ListarOrgaos",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Efvt5qVGGUrysxUb",
+          "name": "api-govbr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2ab36ee3-a538-45e1-956d-1125b5a816ba",
+              "leftValue": "={{ $node[\"HTTP - ListarOrgaos\"].data.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -340
+      ],
+      "id": "3ad39bca-2d63-41dc-84c5-fda867ecdb5a",
+      "name": "Tem Dados"
+    },
+    {
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "orgaos-siape",
+        "updateKey": "codigo",
+        "fields": "descricao",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        -320
+      ],
+      "id": "0e80f784-9ab3-40a1-904b-9be16e1d8931",
+      "name": "Atualizar-Orgaos",
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31bec0e7-2ffd-48bb-ac2b-f9317469ed19",
+              "name": "pagNext",
+              "value": "={{ $node[\"exec\"].json[\"pag\"] + 1}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -520,
+        -220
+      ],
+      "id": "5146e0d9-f271-49a4-b99f-e80491d11450",
+      "name": "incrPag"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gsfZHgJxTNoNl9QH",
+          "mode": "list",
+          "cachedResultName": "orgao-servidor-federal-loop"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1020,
+        20
+      ],
+      "id": "1b1141e5-cf00-4a64-905d-9f34d4a89248",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9001871d-6dc8-402a-a9c0-2a01088dc106",
+              "name": "pag",
+              "value": "={{ $('Merge').first().json.pagNext }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        20
+      ],
+      "id": "1636b3ba-8942-4a60-9a59-11c26d299f84",
+      "name": "pagATUAL"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        20
+      ],
+      "id": "a57ac3a6-32d0-4bb5-adf7-bc5bd47e8a64",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        20
+      ],
+      "id": "96020f62-ca67-4606-b5ec-6fedf83f59a0",
+      "name": "Wait",
+      "webhookId": "625b393e-2759-40df-9c6f-be292066e598"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -740,
+        -220
+      ],
+      "id": "ba5f54d1-b5cc-4dfc-bcc2-46c36b1fe67d",
+      "name": "exec"
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:12:55.815Z",
+      "updatedAt": "2025-07-18T11:12:55.815Z",
+      "id": "B6ij3ufsolDMPjrO",
+      "name": "Servidores Federais"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-08-07T00:33:41.597Z",
+  "versionId": "d8a6a0e7-942b-462d-9d87-db9a6a6d6970"
+}

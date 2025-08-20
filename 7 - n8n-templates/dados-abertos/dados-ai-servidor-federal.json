@@ -1,0 +1,651 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c028685984e"
+  },
+  "id": "EgkBvROLrDeiNVPM",
+  "active": false,
+  "connections": {
+    "HTTP - ListarServFederal": {
+      "main": [
+        [
+          {
+            "node": "Meses para Analise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar-Orgao": {
+      "main": [
+        [
+          {
+            "node": "Split Out - Mongo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - ListarRemuneracao": {
+      "main": [
+        [
+          {
+            "node": "If Remuneracao Existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leiaute mensagem": {
+      "main": [
+        [
+          {
+            "node": "remove duplicidades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out - Mongo": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "corrigir json": {
+      "main": [
+        [
+          {
+            "node": "parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Consultar-Orgao",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "remove duplicidades": {
+      "main": [
+        [
+          {
+            "node": "Send a text - afsolution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meses para Analise": {
+      "main": [
+        [
+          {
+            "node": "HTTP - ListarRemuneracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Remuneracao Existe": {
+      "main": [
+        [
+          {
+            "node": "leiaute mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "corrigir json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP - ListarServFederal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-31T17:48:06.799Z",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "dados-ai-servidor-federal",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.portaldatransparencia.gov.br/api-de-dados/servidores",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pagina",
+              "value": "=1"
+            },
+            {
+              "name": "nome",
+              "value": "={{ $json.nome.$regex }}"
+            },
+            {
+              "name": "orgaoServidorLotacao",
+              "value": "={{ $json.siape }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        -100
+      ],
+      "id": "f10fba2c-7738-44b4-b8ca-b8654f31b2b6",
+      "name": "HTTP - ListarServFederal",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Efvt5qVGGUrysxUb",
+          "name": "api-govbr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "orgaos-siape",
+        "options": {},
+        "query": "={{ $json.descricao.toJsonString() }}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        -120
+      ],
+      "id": "43dd6ad9-ae76-489e-afa6-3c7502f31622",
+      "name": "Consultar-Orgao",
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.portaldatransparencia.gov.br/api-de-dados/servidores/remuneracao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pagina",
+              "value": "1"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.servidor.idServidorAposentadoPensionista }}"
+            },
+            {
+              "name": "mesAno",
+              "value": "={{ $json.periodo }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        -180
+      ],
+      "id": "12e88ab6-e74b-4092-aeac-092ee26b7a45",
+      "name": "HTTP - ListarRemuneracao",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Efvt5qVGGUrysxUb",
+          "name": "api-govbr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Itera sobre todos os itens do input\nreturn $input.all().map(item => {\n  // Acessa os dados de cada item\n  const inputData = item.json || {};\n  \n  const servidor = inputData.servidor || {};\n  const remuneracoesDTO = inputData.remuneracoesDTO || {};\n\n  let remuneracoesText = '**Detalhes da Remuneração**\\n\\n';\n    if (remuneracoesDTO.length > 0) {\n      remuneracoesText += remuneracoesDTO\n        .map((rem, index) => {\n          const rubricasText = (rem.rubricas || [])\n            .map((rubrica, rubricaIndex) => {\n              return `- Rubrica ${rubricaIndex + 1}: ${rubrica.descricao || 'Não especificado'} (R$ ${rubrica.valor ? rubrica.valor.toFixed(2) : '0.00'})`;\n            })\n            .join('\\n');\n          return `**Remuneração ${index + 1} (${rem.mesAno || 'Sem data'})**\\n` +\n                 `- Valor Total Após Deduções: R$ ${rem.valorTotalRemuneracaoAposDeducoes || '0,00'}\\n` +\n                 `- Remuneração Básica Bruta: R$ ${rem.remuneracaoBasicaBruta || '0,00'}\\n` +\n                 `- Imposto Retido na Fonte: R$ ${rem.impostoRetidoNaFonte || '0,00'}\\n` +\n                 `- Previdência Oficial: R$ ${rem.previdenciaOficial || '0,00'}\\n` +\n                 `${rubricasText}\\n`;\n        })\n        .join('\\n');\n    } else {\n      remuneracoesText += 'Sem informações de remuneração.\\n';\n    }\n  \n\n  // Monta o txtPrompt para o item atual\n  const txtPrompt = `**Informações do Servidor**\n\n**Nome**: ${servidor.pessoa.nome}\n**CPF**: ${servidor.pessoa.cpfFormatado}\n**Tipo**: ${servidor.pessoa.tipo}\n**Status**: ${servidor.situacao}\n**Matrícula**: ${servidor.codigoMatriculaFormatado}\n\n**Detalhes da Organização**\n\n**Organização**: ${servidor.orgaoServidorLotacao.nome}\n**Código da Organização**: ${servidor.orgaoServidorLotacao.codigo}\n**Organização Superior**: ${servidor.orgaoServidorLotacao.nomeOrgaoVinculado}\n\n\n`.concat(remuneracoesText);\n\n  // Retorna o objeto no formato esperado pelo n8n\n  return {\n    json: {\n      prompt: txtPrompt\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        -200
+      ],
+      "id": "722c83b4-a04e-4ebe-a7f5-48f6dc325311",
+      "name": "leiaute mensagem"
+    },
+    {
+      "parameters": {
+        "chatId": "0",
+        "text": "={{ $json.prompt }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3080,
+        -200
+      ],
+      "id": "4b892c0f-bf87-4aeb-a057-3bbcb8046cd5",
+      "name": "Send a text - afsolution1",
+      "webhookId": "9678b5bd-7fdc-4ac5-bb6f-82107223ba60",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "codigo",
+        "options": {
+          "destinationFieldName": "siape"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -120
+      ],
+      "id": "4a239774-11b8-419c-8708-f98f918a7c48",
+      "name": "Split Out - Mongo",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1020,
+        -440
+      ],
+      "id": "8b101018-f0cd-4055-b554-6bbb473ab68e",
+      "name": "Telegram Trigger",
+      "webhookId": "6d732905-ea7f-4b30-a6d7-e7e91a2a844f",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe o item de input do n8n\nconst inputData = $input.first().json.output;\n\nconst processedData = [];\n\n// A nova estrutura do input é uma string, não um array, então processamos diretamente\nconst data = { message: { content: inputData } };\n\nif (data.message && data.message.content) {\n  try {\n    let contentStr = data.message.content.trim();\n\n    // ✅ Remove marcação de Markdown (```json ... ```)\n    if (contentStr.startsWith('```')) {\n      contentStr = contentStr.replace(/```json|```/gi, '').trim();\n    }\n\n    // ✅ Limpa quebras de linha e espaços em excesso\n    contentStr = contentStr.replace(/\\\\[rn]/g, '').replace(/\\s+/g, ' ').trim();\n\n    // ✅ Converte para JSON válido (chaves com aspas, valores com aspas duplas)\n    contentStr = contentStr\n      .replace(/([{,])\\s*([a-zA-Z0-9_]+)\\s*:/g, '$1\"$2\":')  // chaves\n      .replace(/:\\s*'([^']*)'/g, ': \"$1\"');                // valores com aspas simples\n\n    let finalObject = {};\n\n    // ✅ Se múltiplos objetos\n    if (contentStr.includes('}, {')) {\n      contentStr = '[' + contentStr + ']';\n      const parsedArray = JSON.parse(contentStr);\n\n      parsedArray.forEach(obj => {\n        Object.assign(finalObject, obj);\n      });\n\n    } else if (contentStr.startsWith('{') && contentStr.endsWith('}')) {\n      finalObject = JSON.parse(contentStr);\n    }\n\n    // ✅ Remove campos nulos, vazios ou undefined\n    Object.keys(finalObject).forEach(key => {\n      if (\n        finalObject[key] === null ||\n        finalObject[key] === '' ||\n        finalObject[key] === undefined\n      ) {\n        delete finalObject[key];\n      }\n    });\n\n    // ✅ Separar os campos em blocos\n    const nomeBlock = {};\n    const descricaoBlock = {};\n    const otherFields = {};\n\n    Object.keys(finalObject).forEach(key => {\n      const value = finalObject[key];\n\n      if (typeof value === 'string') {\n        const regexValue = {\n          $regex: value,\n          $options: 'i'\n        };\n\n        if (key === 'nome') {\n          if (value !== 'deputado') {\n            nomeBlock[key] = regexValue;\n          }\n        } else if (key === 'descricao') {\n          descricaoBlock[key] = regexValue;\n        } else {\n          otherFields[key] = regexValue;\n        }\n      } else {\n        // Para valores que não são string, apenas repassa\n        if (key === 'nome') {\n          if (value !== 'deputado') {\n            nomeBlock[key] = value;\n          }\n        } else if (key === 'descricao') {\n          descricaoBlock[key] = value;\n        } else {\n          otherFields[key] = value;\n        }\n      }\n    });\n\n    // ✅ Adiciona o objeto final em um novo objeto na lista de retorno\n    processedData.push({\n      json: {\n        nome: nomeBlock,\n        descricao: descricaoBlock //,\n       // outros: otherFields\n      }\n    });\n\n  } catch (error) {\n    console.log('Erro ao processar content:', error);\n    // Em caso de erro, ainda adicionamos o item original\n    processedData.push({ json: { content: inputData, error: 'Erro de processamento' } });\n  }\n}\n\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -260
+      ],
+      "id": "2c2cfd0a-8e0f-42eb-8c8e-dbea73e6f56c",
+      "name": "corrigir json"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe os itens do input\nconst items = $input.all();\n\n// Faz o parse do campo \"message.content\" de string JSON para objeto\nconst result = items.map(item => {\n  const contentStr = item.json.message?.content || '{}';\n  let parsedContent = {};\n  let erroParse = null;\n\n  try {\n    parsedContent = JSON.parse(contentStr);\n  } catch (err) {\n    erroParse = err.message;\n\n    // Tenta extrair manualmente o nome e descricao como texto\n    const nomeMatch = contentStr.match(/\"nome\"\\s*:\\s*\"([^\"]+)\"/);\n    const descricaoMatch = contentStr.match(/\"descricao\"\\s*:\\s*[\"{]?\\s*\"([^\"]+)\"/);\n\n    parsedContent = {\n      nome: nomeMatch ? nomeMatch[1] : null,\n      descricao: descricaoMatch ? descricaoMatch[1] : null,\n      erro: \"JSON inválido\",\n      detalhe: erroParse\n    };\n  }\n\n  return {\n    json: {\n      ...item.json,\n      message: {\n        ...item.json.message,\n        contentParsed: parsedContent // novo campo com o JSON parseado ou tratado\n      }\n    }\n  };\n});\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        -260
+      ],
+      "id": "3e7ae75e-a8a6-4754-a967-760d3d9da72c",
+      "name": "parse JSON"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        620,
+        -240
+      ],
+      "id": "8d3e3f26-f1df-41a7-a137-a839aabb2e9c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seen = new Set();\nconst result = [];\n\nfor (const item of items) {\n  const key = JSON.stringify(item.json); // considera o objeto inteiro como chave\n  if (!seen.has(key)) {\n    seen.add(key);\n    result.push(item);\n  }\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -200
+      ],
+      "id": "14a3cc71-a354-45ed-8549-3d9c0ccb0fff",
+      "name": "remove duplicidades"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1020,
+        80
+      ],
+      "id": "ff0d285a-97b5-4747-9aab-c374e9f25763",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\nconst results = [];\n\nfor (const item of inputItems) {\n  const original = item.json;\n\n  const hoje = new Date();\n  hoje.setHours(0, 0, 0, 0);\n  hoje.setDate(1); // Primeiro dia do mês atual\n\n  // Mês anterior\n  const mesAnterior = new Date(hoje);\n  mesAnterior.setMonth(hoje.getMonth() - 2);\n\n  const meses = [mesAnterior, hoje];\n\n  for (const data of meses) {\n    const ano = data.getFullYear();\n    const mes = data.getMonth() + 1;\n    const periodo = `${ano}${String(mes).padStart(2, '0')}`;\n\n    results.push({\n      json: {\n        ...original,\n        periodo,\n        dataInicio: `${ano}-${String(mes).padStart(2, '0')}-01`,\n        dataFim: new Date(ano, mes, 0).toISOString().split('T')[0]\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -280
+      ],
+      "id": "adf09706-ebe2-4a93-a429-4136d852574b",
+      "name": "Meses para Analise"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "334442a8-a666-483d-a123-be4a4dfacb22",
+              "leftValue": "={{ $json.remuneracoesDTO.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2160,
+        -180
+      ],
+      "id": "cc9a8fe0-f64e-454b-8a43-cd1cc808b3dc",
+      "name": "If Remuneracao Existe"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Você é um gerador de query MongoDB. Sua tarefa é criar um filtro MongoDB com base no texto de entrada, usando apenas os parâmetros com os campos:\n  - descricao: definir a INSTITUIÇÃO ou EMPRESAS que será pesquisada.\n  - nome - nome PROPRIO de PESSOA SERVIDOR a ser localizado.\nRetorne APENAS um objeto JSON válido, sem texto adicional, sem blocos de código Markdown, nem explicações. Omita parâmetros não mencionados no texto. Sua resposta deve começar diretamente com { e terminar com }. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        -440
+      ],
+      "id": "cf351a00-1b6b-4c07-a799-ea1a9359d8ad",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5-coder:1.5b",
+        "options": {
+          "temperature": 0,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -160
+      ],
+      "id": "be366332-d438-40f4-82c9-5ad4529ff7b6",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "yoDtkAtP60UtF4WG",
+          "name": "ollama_coder"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "nome",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "siape",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        840,
+        -240
+      ],
+      "id": "6abde93b-409e-4326-af93-e4900573aa6e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "update_id"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -500,
+        -160
+      ],
+      "id": "b79deaf2-4d7a-48be-98ea-ef653e07f1c4",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 0,
+          "message": {
+            "message_id": 349,
+            "from": {
+              "id": 0,
+              "is_bot": false,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 0,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "type": "private"
+            },
+            "date": 1752927155,
+            "text": "Servidor federal de nome João no orgão Ministerio"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    },
+    {
+      "createdAt": "2025-07-18T11:12:55.815Z",
+      "updatedAt": "2025-07-18T11:12:55.815Z",
+      "id": "B6ij3ufsolDMPjrO",
+      "name": "Servidores Federais"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:15.365Z",
+      "updatedAt": "2025-07-18T11:08:15.365Z",
+      "id": "Dwy1qHJRMYrJCR8o",
+      "name": "IA Agent"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-08-06T22:36:28.825Z",
+  "versionId": "a91a1cb7-83eb-4f2b-b884-c8ab840fd42c"
+}

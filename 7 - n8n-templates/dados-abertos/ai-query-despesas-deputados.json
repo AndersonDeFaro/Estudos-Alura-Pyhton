@@ -1,0 +1,344 @@
+{
+  "_id": {
+    "$oid": "6894a369d5da6c02868a71c8"
+  },
+  "id": "7SWawRjhoHGU1kEg",
+  "active": false,
+  "connections": {
+    "corrigir json": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Prepare - Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Info - Nao Localizada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Info - Nao Localizada": {
+      "main": [
+        [
+          {
+            "node": "Send a text - afsolution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "corrigir json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare - Telegram1": {
+      "main": [
+        [
+          {
+            "node": "Send a text - afsolution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-07T12:06:22.982Z",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "ai-query-despesas-deputados",
+  "nodes": [
+    {
+      "parameters": {
+        "collection": "despesas-deputados",
+        "options": {},
+        "query": "={{ $json.toJsonString() }}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        -420
+      ],
+      "id": "c9986bff-fc14-4ab4-b80c-f6aa79ab647c",
+      "name": "MongoDB",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "notesInFlow": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para \"aplanar\" objetos aninhados para o formato 'dot notation'\nfunction flattenObject(obj, parentKey = '') {\n  let result = {};\n  for (let key in obj) {\n    if (Object.prototype.hasOwnProperty.call(obj, key)) {\n      const newKey = parentKey ? `${parentKey}.${key}` : key;\n      const value = obj[key];\n      if (typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof RegExp)) {\n        result = { ...result, ...flattenObject(value, newKey) };\n      } else {\n        result[newKey] = value;\n      }\n    }\n  }\n  return result;\n}\n\n// Recebe o item de input do n8n\nconst inputData = $input.first().json.output;\nconst processedData = [];\n\nconst data = { message: { content: inputData } };\nif (data.message && data.message.content) {\n  try {\n    let contentStr = data.message.content.trim();\n    // ✅ Remove marcação de Markdown (```json ... ```)\n    if (contentStr.startsWith('```')) {\n      contentStr = contentStr.replace(/```json|```/gi, '').trim();\n    }\n    \n    // ✅ Lista para guardar as expressões regulares antes de processar o JSON\n    const regexList = [];\n    const processedContent = contentStr.replace(/\\/([^/]+)\\//g, (match, p1) => {\n      const placeholder = `__regex_${regexList.length}__`;\n      regexList.push(p1);\n      return `\"${placeholder}\"`;\n    });\n\n    // ✅ Processa a string como um JSON normal\n    let parsedObject = JSON.parse(processedContent);\n    \n    // ✅ Substitui os placeholders de volta por objetos RegExp\n    for (const key in parsedObject) {\n      if (typeof parsedObject[key] === 'string' && parsedObject[key].startsWith('__regex_')) {\n        const index = parseInt(parsedObject[key].replace('__regex_', ''), 10);\n        if (!isNaN(index) && regexList[index]) {\n          parsedObject[key] = new RegExp(regexList[index]);\n        }\n      }\n    }\n    \n    // ✅ Aplanar o objeto para o formato 'dot notation'\n    let finalObject = flattenObject(parsedObject);\n\n    // ✅ Mover UF de periodoDespesa para deputado se existir\n    if (finalObject['periodoDespesa.uf']) {\n      finalObject['deputado.uf'] = finalObject['periodoDespesa.uf'];\n      delete finalObject['periodoDespesa.uf'];\n    }\n\n    // ✅ Remove campos nulos, vazios ou undefined\n    Object.keys(finalObject).forEach(key => {\n      const value = finalObject[key];\n      if (\n        value === null ||\n        value === '' ||\n        value === undefined\n      ) {\n        delete finalObject[key];\n      }\n    });\n\n    // ✅ Ajuste especial para o campo 'deputado.nome'\n    if (finalObject['deputado.nome'] !== undefined) {\n      let nomeValue = finalObject['deputado.nome'];\n      if (nomeValue === 'deputado') {\n        delete finalObject['deputado.nome'];\n      } else {\n        let regexValue = '';\n        if (typeof nomeValue === 'string') {\n          regexValue = nomeValue;\n        } else if (nomeValue instanceof RegExp) {\n          regexValue = nomeValue.source;\n        }\n        \n        finalObject['deputado.nome'] = {\n          $regex: regexValue,\n          $options: 'i'\n        };\n      }\n    }\n    \n    // ✅ Adiciona o objeto final em um novo objeto na lista de retorno\n    processedData.push({ json: finalObject });\n  } catch (error) {\n    console.log('Erro ao processar content:', error);\n    processedData.push({ json: { content: inputData, error: 'Erro de processamento' } });\n  }\n}\n\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        -400
+      ],
+      "id": "7b5bb53d-965a-4401-90fa-c52036ca5acd",
+      "name": "corrigir json"
+    },
+    {
+      "parameters": {
+        "chatId": "0",
+        "text": "={{ $json.mensagem }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1620,
+        -540
+      ],
+      "id": "babbe2f8-8cce-4af3-a0da-30a95799ac38",
+      "name": "Send a text - afsolution1",
+      "webhookId": "9ca83499-ec94-4fa4-9776-e1956e4e13a2",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91db0c23-d162-4190-a262-7d86836b458a",
+              "leftValue": "={{ $json.index.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        -360
+      ],
+      "id": "acefac29-ae58-4f1f-90b4-b87ba842a58e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n    {\n      json: {\n        mensagem: \"❌ Informação não localizada\"\n      }\n    }\n  ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -260
+      ],
+      "id": "b2607950-04eb-4779-a7e5-a875be67c526",
+      "name": "Info - Nao Localizada"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -280,
+        -420
+      ],
+      "id": "0f48cf50-7a3b-4986-b105-9f9c98893504",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5-coder:1.5b",
+        "options": {
+          "temperature": 0,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -200
+      ],
+      "id": "92a71c96-efba-48a6-a5a0-012fbaa233c6",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "yoDtkAtP60UtF4WG",
+          "name": "ollama_coder"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Você é um assistente especializado em converter consultas em linguagem natural sobre despesas de deputados brasileiros em queries de filtro para MongoDB.\n\nInstruções de Conversão\nAnalise o texto de entrada e extraia informações relevantes para criar um filtro MongoDB. Considere os seguintes campos disponíveis:\n\nOS JSON DEVE SER OBRIGATÓRAMETE AS SEGUINTES REGRAS:\nCAMPOS DO DEPUTADO (deputado):\n - deputado.nome: Nome completo do deputado\n - deputado.partido: Sigla do partido político\n - deputado.uf: Estado (sigla de 2 letras)\n\nCAMPOS DE PERÍODO (periodoDespesa):\n - periodoDespesa.ano: Ano (número)\n - periodoDespesa.mes: Mês (número de 1 a 12)\n \nRegras de Processamento:\nEstados: Converta nomes de estados para siglas (ex: \"Sergipe\" → \"SE\", \"São Paulo\" → \"SP\")\nPartidos: Use sempre siglas em maiúsculas\nNomes: Use busca parcial quando apropriado (regex case-insensitive)\nDatas: Para mês/ano específicos, use os campos mes e ano. \nCampos opcionais: Inclua apenas os campos mencionados na consulta\n\nSe o ano não for especificado, não inclua filtro de ano\nSe apenas \"deputados de [estado]\" for mencionado, filtre apenas por UF do DEPUTADO\nPara nomes parciais, use regex case-insensitive\nPara intervalos de tempo, converta para formato de data apropriado.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        -440
+      ],
+      "id": "eb5730cc-2647-495a-b976-9145256983f2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Código para n8n - Function Node\n// Formata dados de despesas de deputado para envio ao Telegram\n\nconst inputData = $json;\n\n// Função para formatar valores monetários\nfunction formatarValor(valor) {\n  return new Intl.NumberFormat('pt-BR', {\n    style: 'currency',\n    currency: 'BRL'\n  }).format(valor);\n}\n\n// Função para formatar números\nfunction formatarNumero(numero) {\n  return new Intl.NumberFormat('pt-BR').format(numero);\n}\n\n// Função para formatar o mês\nfunction formatarMes(mes, ano) {\n  const meses = [\n    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',\n    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'\n  ];\n  return `${meses[mes - 1]}/${ano}`;\n}\n\n// Função para truncar texto longo\nfunction truncarTexto(texto, limite = 40) {\n  if (texto.length <= limite) return texto;\n  return texto.substring(0, limite) + '...';\n}\n\ntry {\n  // Validação dos dados de entrada\n  if (!inputData || !inputData.deputado || !inputData.periodoDespesa || !inputData.resumoDespesasMes) {\n    throw new Error('Dados de entrada incompletos');\n  }\n\n  const { deputado, periodoDespesa, resumoDespesasMes } = inputData;\n\n  // Validação dos campos obrigatórios do deputado\n  if (!deputado.nome || !deputado.partido || !deputado.uf) {\n    throw new Error('Dados do deputado incompletos');\n  }\n\n  // Validação do período\n  if (!periodoDespesa.ano || !periodoDespesa.mes) {\n    throw new Error('Período de despesa inválido');\n  }\n\n  // Validação do resumo\n  if (resumoDespesasMes.totalGeral === undefined || !Array.isArray(resumoDespesasMes.despesasPorTipo)) {\n    throw new Error('Resumo de despesas inválido');\n  }\n\n  // Montagem da mensagem\n  let mensagem = '';\n\n  // Cabeçalho com dados do deputado\n  mensagem += `📊 *RELATÓRIO DE DESPESAS PARLAMENTARES*\\n\\n`;\n  mensagem += `👤 *Deputado(a):* ${deputado.nome}\\n`;\n  mensagem += `🏛️ *Partido/UF:* ${deputado.partido}/${deputado.uf}\\n`;\n  mensagem += `📅 *Período:* ${formatarMes(periodoDespesa.mes, periodoDespesa.ano)}\\n`;\n  \n  // Adicionar datas específicas se disponíveis\n  if (periodoDespesa.inicio && periodoDespesa.fim) {\n    const dataInicio = new Date(periodoDespesa.inicio).toLocaleDateString('pt-BR');\n    const dataFim = new Date(periodoDespesa.fim).toLocaleDateString('pt-BR');\n    mensagem += `📆 *De:* ${dataInicio} *até* ${dataFim}\\n`;\n  }\n\n  mensagem += `\\n`;\n\n  // Resumo geral\n  mensagem += `💰 *RESUMO GERAL*\\n`;\n  mensagem += `├ Total Gasto: *${formatarValor(resumoDespesasMes.totalGeral)}*\\n`;\n  mensagem += `└ Quantidade de Despesas: *${formatarNumero(resumoDespesasMes.quantidadeDespesas)}*\\n\\n`;\n\n  // Despesas por tipo\n  if (resumoDespesasMes.despesasPorTipo && resumoDespesasMes.despesasPorTipo.length > 0) {\n    mensagem += `📋 *DETALHAMENTO POR CATEGORIA*\\n\\n`;\n\n    // Ordenar por valor total (maior para menor)\n    const despesasOrdenadas = resumoDespesasMes.despesasPorTipo\n      .sort((a, b) => b.valorTotal - a.valorTotal);\n\n    despesasOrdenadas.forEach((despesa, index) => {\n      const isUltimo = index === despesasOrdenadas.length - 1;\n      const prefixo = isUltimo ? '└' : '├';\n      \n      // Calcular percentual do total\n      const percentual = ((despesa.valorTotal / resumoDespesasMes.totalGeral) * 100).toFixed(1);\n      \n      mensagem += `${prefixo} *${truncarTexto(despesa.tipo)}*\\n`;\n      mensagem += `${isUltimo ? '  ' : '│ '} 💵 Valor: ${formatarValor(despesa.valorTotal)} (${percentual}%)\\n`;\n      mensagem += `${isUltimo ? '  ' : '│ '} 📊 Qtd: ${formatarNumero(despesa.quantidade)} despesas\\n`;\n      \n      if (!isUltimo) {\n        mensagem += `│\\n`;\n      }\n    });\n  }\n\n  // Rodapé informativo\n  mensagem += `\\n\\n`;\n  mensagem += `ℹ️ *Fonte:* Câmara dos Deputados\\n`;\n  mensagem += `🤖 *Gerado em:* ${new Date().toLocaleString('pt-BR', { \n    timeZone: 'America/Sao_Paulo' \n  })}`;\n\n  // Retornar o resultado formatado\n  return {\n    mensagem: mensagem,\n    sucesso: true,\n    dadosProcessados: {\n      deputado: deputado.nome,\n      periodo: formatarMes(periodoDespesa.mes, periodoDespesa.ano),\n      totalDespesas: resumoDespesasMes.quantidadeDespesas,\n      valorTotal: resumoDespesasMes.totalGeral,\n      categorias: resumoDespesasMes.despesasPorTipo?.length || 0\n    }\n  };\n\n} catch (error) {\n  // Tratamento de erro\n  return {\n    erro: true,\n    mensagem: `❌ *ERRO AO PROCESSAR DADOS*\\n\\n${error.message}\\n\\nVerifique se todos os campos obrigatórios estão presentes no JSON de entrada.`,\n    detalhesErro: error.message,\n    sucesso: false\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -500
+      ],
+      "id": "7f9d04c8-0f66-436c-a5ad-7f56f6b517b7",
+      "name": "Prepare - Telegram1"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "update_id": 0,
+          "message": {
+            "message_id": 349,
+            "from": {
+              "id": 0,
+              "is_bot": false,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 0,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "type": "private"
+            },
+            "date": 1752927155,
+            "text": "Despesas dos deputado do partido PL do estado SC"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:15.365Z",
+      "updatedAt": "2025-07-18T11:08:15.365Z",
+      "id": "Dwy1qHJRMYrJCR8o",
+      "name": "IA Agent"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:43.586Z",
+      "updatedAt": "2025-07-18T11:08:43.586Z",
+      "id": "gwa6nH9Q2iiDsjds",
+      "name": "Deputados Federais"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-07T15:57:30.097Z",
+  "versionId": "72cef6a7-2a94-4119-9647-fd238e164796"
+}

@@ -1,0 +1,456 @@
+{
+  "_id": {
+    "$oid": "68a34e17d5da6c0286e9cf5f"
+  },
+  "id": "Qo1jCf95AyJfoAzk",
+  "active": true,
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Option": {
+      "main": [
+        [
+          {
+            "node": "ObterJSONTelegram - Serv",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ObterJSONTelegram - Deputado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ObterJSONTelegram - Despesa Dep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ObterJSONTelegram - Serv": {
+      "main": [
+        [
+          {
+            "node": "WF - AI Serv Federal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ObterJSONTelegram - Deputado": {
+      "main": [
+        [
+          {
+            "node": "WF - AI Deputado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Select Option",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ObterJSONTelegram - Despesa Dep": {
+      "main": [
+        [
+          {
+            "node": "WF - AI Despesa Dep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-18T15:43:26.437Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "ai-curiozinho-transparencia",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2112,
+        16
+      ],
+      "id": "72eec74a-82d8-4980-ac0a-d438b1b50002",
+      "name": "Telegram Trigger",
+      "webhookId": "35d74709-0f40-4906-97f4-c81f72b21122",
+      "credentials": {
+        "telegramApi": {
+          "id": "oS9KNFmYofzPM0t5",
+          "name": "Telegram - AFSolutionBOT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "serv-federal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2797b5ec-d6ec-4f24-a15d-9f64ea73e220"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7fec03c6-8c39-4072-9eed-40382dd48b40",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "deputado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f66c29b5-5fcf-4b21-bfa9-80f30c9d6f0f",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "despesa-deputado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1216,
+        0
+      ],
+      "id": "75673aa2-3e96-43b8-a677-327a72e50faa",
+      "name": "Select Option"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "EgkBvROLrDeiNVPM",
+          "mode": "list",
+          "cachedResultName": "dados-ai-servidor-federal"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "json-telegram"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "5624f3b9-f737-409c-9c48-2bc9d620549e",
+      "name": "WF - AI Serv Federal"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: $('Telegram Trigger').item.json\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -48
+      ],
+      "id": "c7c68236-7fb9-46e2-9cda-5c165300c6e2",
+      "name": "ObterJSONTelegram - Serv"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: $('Telegram Trigger').item.json\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        160
+      ],
+      "id": "9ac918fc-0e30-4df6-ab68-2f089153fb43",
+      "name": "ObterJSONTelegram - Deputado"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vKImK4CiCEn3bgFq",
+          "mode": "list",
+          "cachedResultName": "ai-query-deputados"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        144
+      ],
+      "id": "77bb72da-73ed-4b51-bc54-fba931a06071",
+      "name": "WF - AI Deputado"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Você deve retornar apenas uma das seguintes palavras: deputado, serv-federal, despesa-deputado\nExemplos:\n - Entrada: Obter dados sobre DEPUTADO FEDERAL\n        Resposta: deputado\n - Entrada: Servidor federal de nome NOME DA PESSOA na empresa ou instituição NOME DA INSTITUIÇÃO\n        Resposta: serv-federal\n - Entrada: Obter dados sobre DESPESA de DEPUTADO FEDERAL\n        Resposta: despesa-deputado"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        224
+      ],
+      "id": "d7a4d283-9d52-4edd-950b-7836789b3d29",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5-coder:1.5b",
+        "options": {
+          "temperature": 0,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        480
+      ],
+      "id": "fb0083ef-30f8-496a-95aa-af7a6128bb35",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "yoDtkAtP60UtF4WG",
+          "name": "ollama_coder"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: $('Telegram Trigger').item.json\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        400
+      ],
+      "id": "e879aa19-837a-409a-acca-234c606f7208",
+      "name": "ObterJSONTelegram - Despesa Dep"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "7SWawRjhoHGU1kEg",
+          "mode": "list",
+          "cachedResultName": "ai-query-despesas-deputados"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        384
+      ],
+      "id": "22d02976-1c33-4e8b-b1e5-f9eb5cce4809",
+      "name": "WF - AI Despesa Dep"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 0,
+          "message": {
+            "message_id": 349,
+            "from": {
+              "id": 0,
+              "is_bot": false,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 0,
+              "first_name": "Anderson",
+              "last_name": "Faro",
+              "username": "AndersonDeFaro",
+              "type": "private"
+            },
+            "date": 1752927155,
+            "text": "deputados federal do partido PL"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:15.365Z",
+      "updatedAt": "2025-07-18T11:08:15.365Z",
+      "id": "Dwy1qHJRMYrJCR8o",
+      "name": "IA Agent"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:33.669Z",
+      "updatedAt": "2025-07-18T11:08:33.669Z",
+      "id": "W5MMkj96HiegroxC",
+      "name": "Dados Abertos"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:43.586Z",
+      "updatedAt": "2025-07-18T11:08:43.586Z",
+      "id": "gwa6nH9Q2iiDsjds",
+      "name": "Deputados Federais"
+    },
+    {
+      "createdAt": "2025-07-18T11:12:55.815Z",
+      "updatedAt": "2025-07-18T11:12:55.815Z",
+      "id": "B6ij3ufsolDMPjrO",
+      "name": "Servidores Federais"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-18T17:26:59.651Z",
+  "versionId": "dad91734-c6a1-41a1-a55a-9837b7d85dff"
+}

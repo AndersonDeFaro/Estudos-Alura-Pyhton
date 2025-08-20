@@ -1,0 +1,268 @@
+{
+  "_id": {
+    "$oid": "6893f19bd5da6c028685983e"
+  },
+  "id": "ZfKUmzRLjQQqELWq",
+  "active": false,
+  "connections": {
+    "HTTP - Despesas": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Processar Despesas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Despesas": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exec": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Despesas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-18T10:28:33.884Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "carga-despesas-deputados-federais-loop",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://dadosabertos.camara.leg.br/api/v2/deputados/{{ $json['ref'].deputado.id }}/despesas",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ano",
+              "value": "={{ $json['ref'].periodoDespesa.ano }}"
+            },
+            {
+              "name": "mes",
+              "value": "={{ $json['ref'].periodoDespesa.mes }}"
+            },
+            {
+              "name": "itens",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "n8n-workflow-deputados"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -520
+      ],
+      "id": "b71c2c2a-f3eb-4254-9cec-15fa4a86f8bf",
+      "name": "HTTP - Despesas",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "// O JSON de entrada é um array. Acessamos o primeiro item (índice 0)\n// para chegar aos dados. Dentro dele, a lista de despesas está na chave 'dados'.\nconst dadosDoDeputado = $json;\n\n// Extrai as informações de index, deputado e período da despesa.\n// Elas estão em 'dadosDoDeputado.ref'.\nconst index = {\n  id: dadosDoDeputado.ref.deputado.id,\n  ano: dadosDoDeputado.ref.periodoDespesa.ano,\n  mes: dadosDoDeputado.ref.periodoDespesa.mes\n};\n\nconst deputado = {\n  id: dadosDoDeputado.ref.deputado.id,\n  nome: dadosDoDeputado.ref.deputado.nome,\n  partido: dadosDoDeputado.ref.deputado.partido,\n  uf: dadosDoDeputado.ref.deputado.uf,\n  urlFoto: dadosDoDeputado.ref.deputado.urlFoto\n};\n\nconst ano = dadosDoDeputado.ref.periodoDespesa.ano;\nconst mes = dadosDoDeputado.ref.periodoDespesa.mes;\nconst dataInicio = dadosDoDeputado.ref.periodoDespesa.inicio;\nconst dataFim = dadosDoDeputado.ref.periodoDespesa.fim;\n\n// Esta é a linha corrigida. Agora, a variável 'despesas' aponta\n// para o local correto no JSON, que é dadosDoDeputado.dados.\nconst despesas = dadosDoDeputado.dados || [];\n\nconst despesasPorTipo = {};\nlet totalGeral = 0;\n\n// O loop agora processará a lista de despesas que foi acessada corretamente.\nfor (const despesa of despesas) {\n  const tipo = despesa.tipoDespesa || 'Outro';\n  const valor = parseFloat(despesa.valorLiquido || 0);\n\n  if (!despesasPorTipo[tipo]) {\n    despesasPorTipo[tipo] = {\n      tipo,\n      quantidade: 0,\n      valorTotal: 0\n    };\n  }\n\n  despesasPorTipo[tipo].quantidade += 1;\n  despesasPorTipo[tipo].valorTotal += valor;\n  totalGeral += valor;\n}\n\nconst resultado = {\n  index,\n  deputado,\n  periodoDespesa: {\n    ano,\n    mes,\n    inicio: dataInicio,\n    fim: dataFim\n  },\n  resumoDespesasMes: {\n    totalGeral: parseFloat(totalGeral.toFixed(2)),\n    quantidadeDespesas: despesas.length,\n    despesasPorTipo: Object.values(despesasPorTipo).map(d => ({\n      ...d,\n      valorTotal: parseFloat(d.valorTotal.toFixed(2))\n    }))\n  },\n  despesasDetalhadas: despesas,\n  processadoEm: new Date().toISOString()\n};\n\nreturn [{ json: resultado }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -280
+      ],
+      "id": "a747c7c6-adcf-4dd0-a22a-719af2628dbd",
+      "name": "Processar Despesas"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        740,
+        -300
+      ],
+      "id": "c7596e27-7c42-4742-8a24-bbfc08d5c9c4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "despesas-deputados",
+        "updateKey": "index",
+        "fields": "deputado,periodoDespesa,resumoDespesasMes,despesasDetalhadas,processadoEm",
+        "upsert": true,
+        "options": {
+          "dateFields": "processadoEm"
+        }
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1380,
+        -280
+      ],
+      "id": "adf124a1-b2c0-42af-9320-2be023af88c0",
+      "name": "MongoDB",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "notesInFlow": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "Sp7NiNttnSjGzX7k",
+          "name": "MongoDB - DadosAbertos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -20,
+        -340
+      ],
+      "id": "8c2bffad-fe3f-48b3-9944-def5c5c6ded7",
+      "name": "exec"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "079ffe2d-4a8c-499a-b6eb-2f876fba4d72",
+              "name": "ref",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        -340
+      ],
+      "id": "24dad594-6b3c-4647-8fcc-96f119482ca2",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {
+    "exec": [
+      {
+        "json": {
+          "deputado": {
+            "id": 204379,
+            "nome": "Acácio Favacho",
+            "partido": "MDB",
+            "uf": "AP",
+            "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/204379.jpg"
+          },
+          "periodoDespesa": {
+            "ano": 2025,
+            "mes": 7,
+            "inicio": "2025-07-01",
+            "fim": "2025-07-31"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [
+    {
+      "createdAt": "2025-07-18T11:08:43.586Z",
+      "updatedAt": "2025-07-18T11:08:43.586Z",
+      "id": "gwa6nH9Q2iiDsjds",
+      "name": "Deputados Federais"
+    },
+    {
+      "createdAt": "2025-07-18T11:08:23.324Z",
+      "updatedAt": "2025-07-18T11:08:23.324Z",
+      "id": "2w5mzdm22zPjSMBj",
+      "name": "Transparencia"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-08-07T12:01:15.609Z",
+  "versionId": "735ac501-efdf-404f-9dfe-f24836a9f224"
+}
